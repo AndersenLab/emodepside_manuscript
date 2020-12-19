@@ -7,6 +7,7 @@ library(ggplotify)
 library(gridExtra)
 library(ggpubr)
 library(RColorBrewer)
+library(rstatix)
 
 # EMODEPSIDE MANUSCRIPT FIGURES #
 
@@ -22,6 +23,7 @@ setwd("~/Desktop/emodepside_manuscript/")
 
 assign("all_data",get(load("data/wild_strains_data.RData")))
 assign("mutant_data",get(load("data/mutant_data.RData")))
+assign("EXTTOF",get(load("data/EXT_TOF_dose.RData")))
 
 source("scripts/theme_ms.R")
 
@@ -50,7 +52,7 @@ for(plot_trait in c("norm.n","mean.TOF","median.norm.EXT")){
     breaklimit <- c(-80,55)
   }
   if(plot_trait == "mean.TOF"){
-    plot_aest <-  tweaking_legend
+    plot_aest <-  tweaking_nolab
     title <- "Animal length"
     breaking <- c(-100,-50,0,50) 
     breaklabels = c(-100,-50,0,50)
@@ -87,14 +89,57 @@ mutant_graphs <-  rbind(m1,m2,m3, size = "first")
 mutant_graphs$widths <- unit.pmax(m1$widths,m2$widths,m3$widths)
 grid.newpage()
 mutants <- as_ggplot(mutant_graphs) +
-  draw_plot_label(label = c("A", "B", "C"), size = 12, x = c(0.015, 0.015, 0.015), y = c(0.997, 0.693, 0.387))
-#ggsave2("~/Desktop/Figure2.png",mutants, height = 7, width = 4.5)
+  draw_plot_label(label = c("A", "B", "C"), size = 12, x = c(0.015, 0.015, 0.015), y = c(0.997, 0.687, 0.374))
+#ggsave2("~/Desktop/Figure2.png",mutants, height = 6.5, width = 3.75)
 
+######################
+
+###### FIGURE 3 ######
+
+## EXT--TOF PLOTS ##
+
+s <- 1
+strain_plot_list = list()
+
+for(plot_strain in c("N2","CB4856","DL238")){
+  if(plot_strain == "N2"){
+    lab <- tweaking_nolab 
+    name <- 'atop(bold("N2"))'
+  }
+  if(plot_strain == "CB4856"){
+    lab <- tweaking_nolab 
+    name <- 'atop(bold("CB4856"))'
+  }
+  if(plot_strain == "DL238"){
+    lab <- tweaking_lab 
+    name <- 'atop(bold("DL238"))'
+  }
+  strain_plot_list[[s]] <-  ggplot(EXTTOF[EXTTOF$strain == plot_strain & EXTTOF$condition == "emodepside00781",], aes(x=TOF, y=EXT)) +
+    geom_point(data= EXTTOF[EXTTOF$strain == plot_strain & EXTTOF$condition == "DMSO",], aes(TOF, y=EXT), colour = "darkgrey", size =0.8) +
+    geom_point(size=0.8) +
+    theme_emo +
+    lab +
+    annotate("text", x = 1000, y = 300, label = name, parse = TRUE, size=3.5) +
+    scale_x_continuous(expression(bold(paste("Animal length (",mu,"m)"))), limits = c(0,1100), expand = expand_scale(mult = c(0.005,0.05))) +
+    scale_y_continuous("Optical density", limits = c(0, 4500), expand = expand_scale(mult = c(0.005, 0.05)))
+  s= s+1
+}
+
+strain1 <- ggplotGrob(strain_plot_list[[1]])
+strain2 <- ggplotGrob(strain_plot_list[[2]])
+strain3 <- ggplotGrob(strain_plot_list[[3]])
+
+all_strains <-  rbind(strain1,strain2,strain3, size = "first")
+all_strains$widths <- unit.pmax(strain1$widths,strain2$widths,strain3$widths)
+grid.newpage()
+strains <- as_ggplot(all_strains) +
+  draw_plot_label(label = c("A", "B", "C"), size = 12, x = 0.015, y = c(0.997, 0.687, 0.374))
+#ggsave2("~/Desktop/Figure3.png",strains,  height = 6.5, width = 3.75)
 
 
 ######################
 
-###### FIGURE 5 ######
+###### FIGURE 4 ######
 
 #### DOSE RESPONSE PLOTS ####
 
@@ -231,12 +276,10 @@ ec50_graphs$widths <- unit.pmax(p1$widths,p2$widths,p3$widths)
 grid.newpage()
 
 curves <- as_ggplot(curve_graphs) +
-  draw_plot_label(label = c("A", "B", "C"), size = 12, x = c(0.015, 0.015, 0.015), y = c(0.997, 0.693, 0.387))
+  draw_plot_label(label = c("A", "B", "C"), size = 12, x = c(0.015, 0.015, 0.015), y =  c(0.997, 0.689, 0.38))
 ec50 <- as_ggplot(ec50_graphs) +
-  draw_plot_label(label = c("D", "E", "F"), size = 12, x = c(0.015, 0.015, 0.015), y = c(0.997, 0.693, 0.387))
-
-#plot_grid(curves,ec50,  ncol = 2) + 
-#  ggsave2("~/Desktop/Figure5.png", height = 7, width = 9)
+  draw_plot_label(label = c("D", "E", "F"), size = 12, x = c(0.015, 0.015, 0.015), y = c(0.997, 0.689, 0.38))
+#plot_grid(curves,ec50,  ncol = 2) +  ggsave2("~/Desktop/Figure4.png", height = 6.5, width = 7.5)
 
 ############
 
